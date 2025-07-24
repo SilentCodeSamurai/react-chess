@@ -3,7 +3,7 @@ import type { IGame, IPiece } from "./interfaces";
 import type { MoveResult, PieceState, PieceType, PlayerSide, Position, GameStatus, TurnResult, Move } from "./types";
 
 function getAlgebraicPosition(position: Position): string {
-	return `${String.fromCharCode(position.col + 66)}${position.row + 1}`;
+	return `${String.fromCharCode(position.col + 65)}${position.row + 1}`;
 }
 
 export class Game extends Board implements IGame {
@@ -324,6 +324,7 @@ export class Game extends Board implements IGame {
 						pieceId: piece.id,
 						from: piece.position,
 						to: forwardMovePosition,
+						canPromote: piece.position.row === (piece.side === "WHITE" ? 6 : 1),
 					});
 				}
 				// Pawn forward move 2
@@ -367,12 +368,12 @@ export class Game extends Board implements IGame {
 				// Pawn en passant
 				const enPassantTargetPositions = [
 					{
-						row: piece.position.row + 1,
-						col: piece.position.col,
+						row: piece.position.row,
+						col: piece.position.col + 1,
 					},
 					{
-						row: piece.position.row - 1,
-						col: piece.position.col,
+						row: piece.position.row,
+						col: piece.position.col - 1,
 					},
 				];
 				const enPassantTargetPieces = enPassantTargetPositions.map((position) => this.getPieceAt(position));
@@ -386,8 +387,8 @@ export class Game extends Board implements IGame {
 						latestMove.pieceId === targetPiece.id
 					) {
 						const enPassantMovePosition = {
-							row: targetPiece.position.row,
-							col: piece.position.col + direction,
+							row: piece.position.row + direction,
+							col: targetPiece.position.col,
 						};
 						moves.push({
 							pieceId: piece.id,
@@ -397,89 +398,10 @@ export class Game extends Board implements IGame {
 						});
 					}
 				}
-				// Pawn promotion
-				if (piece.position.row === (piece.side === "WHITE" ? 7 : 0)) {
-					moves.push({
-						pieceId: piece.id,
-						from: piece.position,
-						to: {
-							col: piece.position.col,
-							row: piece.position.row + direction,
-						},
-						canPromote: true,
-					});
-				}
 				break;
 			}
 			case "ROOK": {
-				// Rook castling
-				if (piece.hasMoved) {
-					return moves;
-				}
-				const kings = this.getPiecesByTypeAndSide("KING", piece.side);
-				const king = kings[0];
-				if (kings.length !== 1 || kings[0].hasMoved) {
-					return moves;
-				}
-				const kingFrom = {
-					row: king.position.col,
-					col: king.position.row,
-				};
-				const kingTo = {
-					row: piece.position.col,
-					col: piece.position.row,
-				};
-				const rookFrom = {
-					row: piece.position.col,
-					col: piece.position.row,
-				};
-				const rookTo = {
-					row: king.position.col,
-					col: king.position.row,
-				};
-				let castlingAvailable = true;
-				if (piece.position.col < king.position.col) {
-					for (let x = piece.position.col + 1; x < king.position.col; x++) {
-						const blockingPiece = this.getPieceAt({
-							col: x,
-							row: piece.position.row,
-						});
-						if (blockingPiece) {
-							castlingAvailable = false;
-							break;
-						}
-					}
-				} else {
-					for (let x = piece.position.col - 1; x > king.position.col; x--) {
-						const blockingPiece = this.getPieceAt({
-							col: x,
-							row: piece.position.row,
-						});
-						if (blockingPiece) {
-							castlingAvailable = false;
-							break;
-						}
-					}
-				}
-				if (castlingAvailable) {
-					moves.push({
-						pieceId: piece.id,
-						from: piece.position,
-						to: rookTo,
-						castling: {
-							rook: {
-								pieceId: piece.id,
-								from: rookFrom,
-								to: rookTo,
-							},
-							king: {
-								pieceId: king.id,
-								from: kingFrom,
-								to: kingTo,
-							},
-						},
-					});
-				}
+				// Rooks do not generate castling moves; only the king does.
 				break;
 			}
 			case "KING": {
@@ -487,60 +409,67 @@ export class Game extends Board implements IGame {
 				if (piece.hasMoved) {
 					return moves;
 				}
-				const rooks = this.getPiecesByTypeAndSide("ROOK", piece.side);
-				for (const rook of rooks) {
-					let castlingAvailable = true;
-					if (rook.hasMoved) {
-						continue;
-					}
-					const rookFrom = rook.position;
-					const rookTo = {
-						row: piece.position.col,
-						col: piece.position.row,
-					};
-					const kingFrom = piece.position;
-					const kingTo = {
-						row: rook.position.col,
-						col: rook.position.row,
-					};
-					if (rook.position.col < piece.position.col) {
-						for (let x = rook.position.col + 1; x < piece.position.col; x++) {
-							const blockingPiece = this.getPieceAt({
-								col: x,
-								row: rook.position.row,
-							});
-							if (blockingPiece) {
-								castlingAvailable = false;
-								break;
-							}
-						}
-					} else {
-						for (let x = rook.position.col - 1; x > piece.position.col; x--) {
-							const blockingPiece = this.getPieceAt({
-								col: x,
-								row: rook.position.row,
-							});
-							if (blockingPiece) {
-								castlingAvailable = false;
-								break;
-							}
+				const row = piece.position.row;
+				const col = piece.position.col;
+				const rooks = this.getPiecesByTypeAndSide("ROOK", piece.side).filter(
+					(r) => !r.hasMoved && r.position.row === row
+				);
+				// King-side castling
+				const kingSideRook = rooks.find((r) => r.position.col === 7);
+				if (kingSideRook) {
+					let pathClear = true;
+					for (let c = col + 1; c < 7; c++) {
+						if (this.getPieceAt({ row, col: c })) {
+							pathClear = false;
+
+							break;
 						}
 					}
-					if (castlingAvailable) {
+					if (pathClear) {
 						moves.push({
 							pieceId: piece.id,
 							from: piece.position,
-							to: rookTo,
+							to: { row, col: col + 2 },
 							castling: {
 								rook: {
-									pieceId: rook.id,
-									from: rookFrom,
-									to: rookTo,
+									pieceId: kingSideRook.id,
+									from: kingSideRook.position,
+									to: { row, col: col + 1 },
 								},
 								king: {
 									pieceId: piece.id,
-									from: kingFrom,
-									to: kingTo,
+									from: piece.position,
+									to: { row, col: col + 2 },
+								},
+							},
+						});
+					}
+				}
+				// Queen-side castling
+				const queenSideRook = rooks.find((r) => r.position.col === 0);
+				if (queenSideRook) {
+					let pathClear = true;
+					for (let c = col - 1; c > 0; c--) {
+						if (this.getPieceAt({ row, col: c })) {
+							pathClear = false;
+							break;
+						}
+					}
+					if (pathClear) {
+						moves.push({
+							pieceId: piece.id,
+							from: piece.position,
+							to: { row, col: col - 2 },
+							castling: {
+								rook: {
+									pieceId: queenSideRook.id,
+									from: queenSideRook.position,
+									to: { row, col: col - 1 },
+								},
+								king: {
+									pieceId: piece.id,
+									from: piece.position,
+									to: { row, col: col - 2 },
 								},
 							},
 						});

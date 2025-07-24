@@ -1,7 +1,7 @@
 import React, { useImperativeHandle, useRef, forwardRef } from "react";
 import { animated, useSpring } from "@react-spring/three";
 import type { PieceProps } from "./types";
-import type { PieceType, PlayerSide } from "../engineV2/types";
+import type { PieceType, PlayerSide } from "@/engine/types";
 import { useKingMesh } from "./meshes/kingMesh";
 import { useQueenMesh } from "./meshes/queenMesh";
 import { useRookMesh } from "./meshes/rookMesh";
@@ -35,10 +35,13 @@ export const Piece = React.memo(
 	forwardRef<PieceHandle, GenericPieceProps>(({ type, color, initialCoordinates, onClick }, ref) => {
 		const meshData = meshHooks[type](color);
 		const positionRef = useRef<[number, number, number]>(initialCoordinates);
-		const [springs, api] = useSpring(() => ({
-			from: { position: initialCoordinates },
-			config: { mass: 0.1 },
-		}), []); // only use initialCoordinates on mount
+		const [springs, api] = useSpring(
+			() => ({
+				from: { position: initialCoordinates },
+				config: { mass: 0.1 },
+			}),
+			[]
+		); // only use initialCoordinates on mount
 
 		useImperativeHandle(ref, () => ({
 			playMoveAnimation: (fromCoordinates, toCoordinates, onRest) => {
@@ -54,7 +57,11 @@ export const Piece = React.memo(
 		}));
 
 		return (
-			<animated.group position={springs.position.to((x, y, z) => [x, y, z])} onClick={onClick}>
+			<animated.group
+				position={springs.position.to((x, y, z) => [x, y, z])}
+				rotation={[0, color === "WHITE" ? -Math.PI / 2 : Math.PI / 2, 0]}
+				onClick={onClick}
+			>
 				<mesh castShadow receiveShadow geometry={meshData.body.geometry} material={meshData.body.material} />
 				{meshData.top && (
 					<mesh

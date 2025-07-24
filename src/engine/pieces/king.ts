@@ -1,6 +1,6 @@
-import { BasePiece } from "./base";
 import type { IPiece } from "../interfaces";
 import type { PlayerSide, Position } from "../types";
+import { BasePiece } from "./base";
 
 export class King extends BasePiece implements IPiece {
 	constructor(side: PlayerSide, position: Position) {

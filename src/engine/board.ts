@@ -29,10 +29,10 @@ export class Board implements IBoard {
 
 	public reset(): void {
 		this.pieces = [
-			new King("WHITE", { col: 3, row: 0 }),
-			new King("BLACK", { col: 3, row: 7 }),
-			new Queen("WHITE", { col: 4, row: 0 }),
-			new Queen("BLACK", { col: 4, row: 7 }),
+			new King("WHITE", { col: 4, row: 0 }),
+			new King("BLACK", { col: 4, row: 7 }),
+			new Queen("WHITE", { col: 3, row: 0 }),
+			new Queen("BLACK", { col: 3, row: 7 }),
 			new Rook("WHITE", { col: 0, row: 0 }),
 			new Rook("BLACK", { col: 0, row: 7 }),
 			new Rook("WHITE", { col: 7, row: 0 }),

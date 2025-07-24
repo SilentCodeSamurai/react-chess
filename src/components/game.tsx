@@ -1,9 +1,9 @@
 import { useGLTF } from "@react-three/drei";
-import type { PieceState, MoveType, PlayerSide, Move, MoveResult, Position, GameStatus } from "../engineV2/types";
+import type { PieceState, MoveType, PlayerSide, Move, Position, GameStatus } from "../engine/types";
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import { Tile } from "./tile";
-import { Game } from "../engineV2/game";
+import { Game } from "@/engine/game";
 import { Piece } from "./piece";
 import { AnimationManager } from "./animationManager";
 
@@ -135,6 +135,16 @@ function getMoveType(move: Move): MoveType {
 	return "NORMAL";
 }
 
+// Transpose position to coordinates
+function trasposePositionToCoordinates(position: Position): [number, number, number] {
+	const { col, row } = position;
+	const offsetedX = row - 3;
+	const offsetedZ = col - 3;
+	const positionX = offsetedX * HORIZONTAL_MULTIPLIER - HORIZONTAL_MULTIPLIER / 2;
+	const positionZ = offsetedZ * HORIZONTAL_MULTIPLIER - HORIZONTAL_MULTIPLIER / 2;
+	return [positionX, Y_POSITION_OFFSET, positionZ];
+}
+
 export function GameComponent() {
 	const { nodes, materials } = useGLTF("/assets/ABeautifulGame.gltf") as any;
 	const [game] = useState(() => new Game());
@@ -177,16 +187,6 @@ export function GameComponent() {
 		);
 	}
 
-	// Transpose position to coordinates
-	function trasposePositionToCoordinates(position: Position): [number, number, number] {
-		const { col: row, row: col } = position;
-		const offsetedX = row - 3;
-		const offsetedZ = col - 3;
-		const positionX = offsetedX * HORIZONTAL_MULTIPLIER - HORIZONTAL_MULTIPLIER / 2;
-		const positionZ = offsetedZ * HORIZONTAL_MULTIPLIER - HORIZONTAL_MULTIPLIER / 2;
-		return [positionX, Y_POSITION_OFFSET, positionZ];
-	}
-
 	// On mount, initialize pieces
 	useEffect(() => {
 		const initial = game.pieceStates.map((piece) => ({
@@ -213,6 +213,7 @@ export function GameComponent() {
 	// Handle position click
 	const handlePositionClick = useCallback(
 		async (position: Position) => {
+			console.log("handlePositionClick", position);
 			const pieceStateAtPosition = game.getPieceStateAt(position);
 			if (selectedPieceId != null) {
 				const legalMoves = game.getLegalMoves(selectedPieceId);

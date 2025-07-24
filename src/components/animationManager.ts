@@ -1,5 +1,5 @@
 import type { PieceHandle } from "./piece";
-import type { PieceState, PlayerSide, MoveResult, Position, TurnResult } from "../engineV2/types";
+import type { PieceState, PlayerSide, Position, TurnResult } from "@/engine/types";
 
 export class AnimationManager {
 	private pieceRefs: React.RefObject<Record<number, PieceHandle>>;
@@ -45,6 +45,7 @@ export class AnimationManager {
 		const moveResult = turnResult;
 		// --- Castling: animate king and rook in parallel ---
 		if (moveResult.castling) {
+			console.log("animateTurn castling", moveResult.castling);
 			const kingInfo = this.getPieceInfo(moveResult.castling.king.pieceId);
 			const rookInfo = this.getPieceInfo(moveResult.castling.rook.pieceId);
 			if (!kingInfo || !rookInfo) {
@@ -59,29 +60,42 @@ export class AnimationManager {
 			const kingToUp: [number, number, number] = [kingTo[0], this.LIFTED_Y_COORDINATE_OFFSET, kingTo[2]];
 			const kingToDown: [number, number, number] = [kingTo[0], this.Y_COORDINATE_OFFSET, kingTo[2]];
 
+			console.log({ kingFrom, kingTo, kingFromUp, kingToUp, kingToDown });
+
 			const rookFrom = rookInfo.coordinates;
 			const rookTo = trasposePositionToCoordinates(moveResult.castling.rook.to);
 			const rookFromUp: [number, number, number] = [rookFrom[0], this.LIFTED_Y_COORDINATE_OFFSET, rookFrom[2]];
 			const rookToUp: [number, number, number] = [rookTo[0], this.LIFTED_Y_COORDINATE_OFFSET, rookTo[2]];
 			const rookToDown: [number, number, number] = [rookTo[0], this.Y_COORDINATE_OFFSET, rookTo[2]];
 
-			// Both up
-			await Promise.all([
-				new Promise<void>((resolve) => {
-					if (kingRef && kingRef.playMoveAnimation) {
-						kingRef.playMoveAnimation(kingFrom, kingFromUp, resolve);
-					} else {
-						resolve();
-					}
-				}),
-				new Promise<void>((resolve) => {
-					if (rookRef && rookRef.playMoveAnimation) {
-						rookRef.playMoveAnimation(rookFrom, rookFromUp, resolve);
-					} else {
-						resolve();
-					}
-				}),
-			]);
+			console.log({ rookFrom, rookTo, rookFromUp, rookToUp, rookToDown });
+
+			// Only animate lift if not already lifted
+			const kingNeedsLift = Math.abs(kingFrom[1] - this.LIFTED_Y_COORDINATE_OFFSET) > 1e-6;
+			const rookNeedsLift = Math.abs(rookFrom[1] - this.LIFTED_Y_COORDINATE_OFFSET) > 1e-6;
+
+			if (kingNeedsLift || rookNeedsLift) {
+				await Promise.all([
+					kingNeedsLift
+						? new Promise<void>((resolve) => {
+							if (kingRef && kingRef.playMoveAnimation) {
+								kingRef.playMoveAnimation(kingFrom, kingFromUp, resolve);
+							} else {
+								resolve();
+							}
+						})
+						: Promise.resolve(),
+					rookNeedsLift
+						? new Promise<void>((resolve) => {
+							if (rookRef && rookRef.playMoveAnimation) {
+								rookRef.playMoveAnimation(rookFrom, rookFromUp, resolve);
+							} else {
+								resolve();
+							}
+						})
+						: Promise.resolve(),
+				]);
+			}
 			// Both slide
 			await Promise.all([
 				new Promise<void>((resolve) => {

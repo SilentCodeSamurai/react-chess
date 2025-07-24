@@ -1,7 +1,7 @@
 import { Canvas } from "@react-three/fiber";
 import { Html, useProgress, OrbitControls } from "@react-three/drei";
 import { Suspense } from "react";
-import { GameComponent } from "./components/game";
+import { GameComponent } from "@/components/game";
 
 function Loader() {
 	const { progress } = useProgress();

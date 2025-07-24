@@ -1,5 +1,5 @@
 import { useGLTF } from "@react-three/drei";
-import type { PlayerSide } from "../../engineV2/types";
+import type { PlayerSide } from "@/engine/types";
 
 export function useKingMesh(color: PlayerSide) {
   const { nodes, materials } = useGLTF("/assets/ABeautifulGame.gltf") as any;

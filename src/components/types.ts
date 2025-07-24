@@ -1,5 +1,5 @@
 import type { ThreeEvent } from "@react-three/fiber";
-import type { PlayerSide } from "../engineV2/types";
+import type { PlayerSide } from "@/engine/types";
 
 export type PieceProps = {
 	initialCoordinates: [number, number, number];
