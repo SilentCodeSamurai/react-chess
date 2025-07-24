@@ -8,15 +8,15 @@ export class Queen extends BasePiece implements IPiece {
 	}
 
 	getMovePaths(): Array<Generator<Position, void, unknown>> {
-		const steps = [
-			{ x: 1, y: 0 },
-			{ x: -1, y: 0 },
-			{ x: 0, y: 1 },
-			{ x: 0, y: -1 },
-			{ x: 1, y: 1 },
-			{ x: 1, y: -1 },
-			{ x: -1, y: 1 },
-			{ x: -1, y: -1 },
+		const steps: Position[] = [
+			{ row: 1, col: 0 },
+			{ row: -1, col: 0 },
+			{ row: 0, col: 1 },
+			{ row: 0, col: -1 },
+			{ row: 1, col: 1 },
+			{ row: 1, col: -1 },
+			{ row: -1, col: 1 },
+			{ row: -1, col: -1 },
 		];
 
 		return steps.map((step) => {
@@ -25,8 +25,8 @@ export class Queen extends BasePiece implements IPiece {
 				let currentPosition = self.position;
 				while (true) {
 					currentPosition = {
-						x: currentPosition.x + step.x,
-						y: currentPosition.y + step.y,
+						col: currentPosition.col + step.col,
+						row: currentPosition.row + step.row,
 					};
 					yield currentPosition;
 				}

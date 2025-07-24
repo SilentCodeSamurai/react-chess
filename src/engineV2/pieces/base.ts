@@ -35,7 +35,7 @@ export class BasePiece implements IPiece {
 		return this._position;
 	}
 
-	public get state(): "ALIVE" | "DEAD" {
+	public get status(): "ALIVE" | "DEAD" {
 		return this._state;
 	}
 

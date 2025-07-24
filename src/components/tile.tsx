@@ -3,11 +3,12 @@ import type { ThreeEvent } from "@react-three/fiber";
 
 type TileProps = {
 	color: string;
+	highlighted: boolean;
 	position: [number, number, number];
 	onClick: (e: ThreeEvent<MouseEvent>) => void;
 };
 
-export function Tile({ color, position, onClick }: TileProps) {
+export function Tile({ color, highlighted, position, onClick }: TileProps) {
 	return (
 		<Center position={position}>
 			<RoundedBox
@@ -16,7 +17,7 @@ export function Tile({ color, position, onClick }: TileProps) {
 				args={[0.063, 0.001, 0.063]}
 				onClick={onClick}
 			>
-				<meshBasicMaterial color={color} transparent opacity={0.3} />
+				<meshBasicMaterial color={color} transparent opacity={highlighted ? 0.3 : 0} />
 			</RoundedBox>
 		</Center>
 	);

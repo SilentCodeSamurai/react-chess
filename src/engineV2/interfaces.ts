@@ -5,15 +5,11 @@ import type {
 	PieceState,
 	PlayerSide,
 	Position,
-	GameState,
+	TurnResult,
+	GameStatus,
 } from "./types";
 
-export interface IPiece {
-	readonly id: number;
-	readonly type: PieceType;
-	readonly side: PlayerSide;
-	readonly position: Position;
-	readonly state: "ALIVE" | "DEAD";
+export interface IPiece extends PieceState {
 	readonly hasMoved: boolean;
 	getMovePaths(): Array<Generator<Position, void, unknown>>;
 	move(position: Position): void;
@@ -21,23 +17,23 @@ export interface IPiece {
 }
 
 export interface IBoard {
-	readonly pieces: IPiece[];
-	readonly pieceMap: Map<number, IPiece>;
-	readonly history: MoveResult[];
-	getAvailableMoves(pieceId: number): Move[];
-	movePiece(id: number, to: Position, promotionType?: PieceType): MoveResult;
+	readonly pieceStates: PieceState[];
+	getPieceStateById(id: number): PieceState | null;
+	getPieceStateAt(position: Position): PieceState | null;
 	reset(): void;
 }
 
-export interface IGame {
-	readonly board: PieceState[];
-	readonly state: GameState;
+export interface IGame extends IBoard {
 	readonly currentTurn: PlayerSide;
-	getAvailableMoves(pieceId: number): Move[];
+	readonly history: MoveResult[];
+	readonly algebraicHistory: string[];
+	readonly turnCount: number;
+	readonly status: GameStatus;
+	getLegalMoves(pieceId: number): Move[];
 	makeTurn(
 		pieceId: number,
 		to: Position,
 		promotionType?: PieceType
-	): MoveResult;
-	undoTurn(): MoveResult;
+	): TurnResult;
+	reset(): void;
 }
